@@ -212,6 +212,7 @@ bool compile(const char * script, std::string& generated_class)
     std::list<std::string> field_types;
     std::list<bool> field_is_list;
     std::list<bool> type_is_builtin;
+    bool is_class_contained = false;
     
     char line[_CHAR_COUNT_IN_LINE_];
     while(fs.getline(line, _CHAR_COUNT_IN_LINE_, '\n'))
@@ -261,6 +262,10 @@ bool compile(const char * script, std::string& generated_class)
                     std::cout<<"[ERROR] bad class name!"<<std::endl;
                     return false;
                 }
+                
+                generated_class = class_name;
+                is_class_contained = true;
+                
                 if(do_class_exists(classes, class_name))
                 {
                     std::cout<<"[WARN] class ["<<class_name<<"] already generated!"<<std::endl;
@@ -271,7 +276,6 @@ bool compile(const char * script, std::string& generated_class)
                     // register this class
                     classes.push_back(class_name);
                 }
-                generated_class = class_name;
             }
         }
         else
@@ -340,6 +344,9 @@ bool compile(const char * script, std::string& generated_class)
         }
     }
     
+    // check if this description file contains a class
+    if(!is_class_contained)
+        return true;
     // do the real job to generate files of classes
     std::cout<<"[OK] begin generate class [ "<<class_name<<" ]"<<std::endl;
     // create class related files : hpp and cpp files
