@@ -1,0 +1,4 @@
+chinese family               # -> class Family {};
+member, string, true         # -> QList<QString> mMember;
+single parent, bool, false   # -> bool mSingleParent;
+address, string, false       # -> QString mAddress;
