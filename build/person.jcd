@@ -1,0 +1,9 @@
+# person.jcd
+require family.jcd              # -> include header files
+person                          # -> class Person {};
+name, string, false             # -> QString mName;
+age, int, false                 # -> int mAge;
+children, string, true          # -> QList<QString> mChildren;
+cards, int, true                # -> QList<int> mCards;
+family, chinese family, false   # -> ChineseFamily mFamily;
+upper, chinese family, true     # -> ChineseFamily mUpper

@@ -359,6 +359,7 @@ bool compile(const char * script, std::string& generated_class)
     // hpp header
     hppfile<<"#ifndef "<<make_file_head_macro(class_name)<<std::endl;
     hppfile<<"#define "<<make_file_head_macro(class_name)<<std::endl;
+    hppfile<<std::endl;
     hppfile<<"#include <QObject>"<<std::endl;
     hppfile<<"#include <QString>"<<std::endl;
     hppfile<<"#include <QList>"<<std::endl;
@@ -490,32 +491,141 @@ bool compile(const char * script, std::string& generated_class)
                 cppfile<<"}"<<std::endl;
                 cppfile<<std::endl;
                 // setter
-                
+                cppfile<<"void "<<class_name<<"::Set"<<*iname<<"(const QVariantList& _"<<*iname<<")"<<std::endl;
+                cppfile<<"{"<<std::endl;
+                cppfile<<"\tm"<<*iname<<".clear();"<<std::endl;
+                cppfile<<"\tQVariantList::const_iterator itr="<<"_"<<*iname<<".begin();"<<std::endl;
+                cppfile<<"\tfor(; itr!=_"<<*iname<<".end(); itr++)"<<std::endl;
+                cppfile<<"\t{"<<std::endl;
+                cppfile<<"\t\t"<<*itype<<" _ref;"<<std::endl;
+                cppfile<<"\t\tQJson::QObjectHelper::qvariant2qobject((*itr).toMap(), &_ref);"<<std::endl;
+                cppfile<<"\t\tm"<<*iname<<".push_back(_ref);"<<std::endl;
+                cppfile<<"\t}"<<std::endl;
+                cppfile<<"}"<<std::endl;
+                cppfile<<std::endl;
             }
         }
         else
         {
             if(*ibuiltin)
             {
+                // declaration
                 hppfile<<"\t"<<*itype<<" Get"<<*iname<<"() const;"<<std::endl;
                 hppfile<<"\tvoid Set"<<*iname<<"(const "<<*itype<<"& _"<<*iname<<");"<<std::endl;
                 hppfile<<std::endl;
                 // implementation
+                // getter
                 cppfile<<*itype<<" "<<class_name<<"::Get"<<*iname<<"() const"<<std::endl;
                 cppfile<<"{"<<std::endl;
                 cppfile<<"\treturn m"<<*iname<<";"<<std::endl;
                 cppfile<<"}"<<std::endl;
                 cppfile<<std::endl;
-                
+                // setter
+                cppfile<<"void "<<class_name<<"::Set"<<*iname<<"(const "<<*itype<<"& _"<<*iname<<")"<<std::endl;
+                cppfile<<"{"<<std::endl;
+                cppfile<<"\tthis->m"<<*iname<<" = _"<<*iname<<";"<<std::endl;
+                cppfile<<"}"<<std::endl;
+                cppfile<<std::endl;
             }
             else
             {
+                // declaration
                 hppfile<<"\tQVariantMap Get"<<*iname<<"() const;"<<std::endl;
                 hppfile<<"\tvoid Set"<<*iname<<"(const QVariantMap& _"<<*iname<<");"<<std::endl;
                 hppfile<<std::endl;
+                // implementation
+                // getter
+                cppfile<<"QVariantMap "<<class_name<<"::Get"<<*iname<<"() const"<<std::endl;
+                cppfile<<"{"<<std::endl;
+                cppfile<<"\treturn QJson::QObjectHelper::qobject2qvariant(&m"<<*iname<<");"<<std::endl;
+                cppfile<<"}"<<std::endl;
+                cppfile<<std::endl;
+                // setter
+                cppfile<<"void "<<class_name<<"::Set"<<*iname<<"(const QVariantMap& _"<<*iname<<")"<<std::endl;
+                cppfile<<"{"<<std::endl;
+                cppfile<<"\tQJson::QObjectHelper::qvariant2qobject(_"<<*iname<<", &m"<<*iname<<");"<<std::endl;
+                cppfile<<"}"<<std::endl;
+                cppfile<<std::endl;
             }
         }
     }
+    
+    // add modifiers to class
+    hppfile<<"\t// modifiers"<<std::endl;
+    for(iname=field_names.begin(),itype=field_types.begin(),ilist=field_is_list.begin();
+        iname!=field_names.end();
+        iname++, itype++, ilist++)
+    {
+        if(*ilist)
+        {
+            // declaration
+            hppfile<<"\tQList<"<<*itype<<">& Get"<<*iname<<"Ref();"<<std::endl;
+            // implementation
+            cppfile<<"QList<"<<*itype<<">& "<<class_name<<"::Get"<<*iname<<"Ref()"<<std::endl;
+            cppfile<<"{"<<std::endl;
+            cppfile<<"\treturn m"<<*iname<<";"<<std::endl;
+            cppfile<<"}"<<std::endl;
+            cppfile<<std::endl;
+        }
+        else
+        {
+            // declaration
+            hppfile<<"\t"<<*itype<<"& Get"<<*iname<<"Ref();"<<std::endl;
+            // implementation
+            cppfile<<*itype<<"& "<<class_name<<"::Get"<<*iname<<"Ref()"<<std::endl;
+            cppfile<<"{"<<std::endl;
+            cppfile<<"\treturn m"<<*iname<<";"<<std::endl;
+            cppfile<<"}"<<std::endl;
+            cppfile<<std::endl;
+        }
+    }
+    
+    // add serializer and deserializer
+    // declaration
+    hppfile<<"\t//serializer and deserializer"<<std::endl;
+    hppfile<<"\tQByteArray serialize();"<<std::endl;
+    hppfile<<"\tvoid deserialize(const QByteArray& data);"<<std::endl;
+    hppfile<<"\tbool ok() const;"<<std::endl;
+    // implementation
+    // serializer
+    cppfile<<"QByteArray "<<class_name<<"::serialize()"<<std::endl;
+    cppfile<<"{"<<std::endl;
+    cppfile<<"\tQVariantMap map = QJson::QObjectHelper::qobject2qvariant(this);"<<std::endl;
+    cppfile<<"\tQJson::Serializer serializer;"<<std::endl;
+    cppfile<<"\treturn serializer.serialize(map, &mOK);"<<std::endl;
+    cppfile<<"}"<<std::endl;
+    cppfile<<std::endl;
+    // deserializer
+    cppfile<<"void "<<class_name<<"::deserialize(const QByteArray& data)"<<std::endl;
+    cppfile<<"{"<<std::endl;
+    cppfile<<"\tQJson::Parser parser;"<<std::endl;
+    cppfile<<"\tQVariant var = parser.parse(data, &mOK);"<<std::endl;
+    cppfile<<"\tQJson::QObjectHelper::qvariant2qobject(var.toMap(), this);"<<std::endl;
+    cppfile<<"}"<<std::endl;
+    cppfile<<std::endl;
+    // ok 
+    cppfile<<"bool "<<class_name<<"::ok() const"<<std::endl;
+    cppfile<<"{"<<std::endl;
+    cppfile<<"\treturn mOK;"<<std::endl;
+    cppfile<<"}"<<std::endl;
+    cppfile<<std::endl;
+    
+    // the private members of class
+    hppfile<<"private:"<<std::endl;
+    for(iname=field_names.begin(),itype=field_types.begin(),ilist=field_is_list.begin();
+        iname!=field_names.end();
+        iname++, itype++, ilist++)
+    {
+        if(*ilist)
+            hppfile<<"\tQList<"<<*itype<<"> m"<<*iname<<";"<<std::endl;
+        else
+            hppfile<<"\t"<<*itype<<" m"<<*iname<<";"<<std::endl;
+    }
+    hppfile<<"\tbool mOK;"<<std::endl;
+    hppfile<<"};"<<std::endl;
+    hppfile<<std::endl;
+    hppfile<<"#endif // "<<make_file_head_macro(class_name)<<std::endl;
+    hppfile<<std::endl;
     
     return true;
 }

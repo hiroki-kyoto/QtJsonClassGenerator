@@ -8,40 +8,40 @@
 
 #include <iostream>
 
-#include "Person.hpp"
+#include "person.h"
 
 
 int main(int argc, char *argv[])
 {   
     QCoreApplication a(argc, argv);
     Person tom;
-    tom.SetName("Tom");
-    tom.SetAge(24);
-    QList<QVariant> children = tom.GetChildren();
+    tom.setName("Tom");
+    tom.setAge(24);
+    QList<QVariant> children = tom.children();
     children.append("Jenny");
     children.append("Sandy");
     children.append("Maven");
-    tom.SetChildren(children);
+    tom.setChildren(children);
     
-    QList<QVariant> cards = tom.GetCards();
+    QList<QVariant> cards = tom.cards();
     cards.append(2);
     cards.append(5);
     cards.append(11);
     cards.append(8);
     cards.append(6);
-    tom.SetCards(cards);
+    tom.setCards(cards);
     
-    ChineseFamily & fm = tom.GetFamilyRef();
-    fm.SetAddress("NY NW STR #228");
+    Family & fm = tom.getFamilyRef();
+    fm.setAddress("NY NW STR #228");
     QList<QVariant> members;
     members.push_back("James");
     members.push_back("Geoger");
     members.push_back("Bayers");
     members.push_back("Lucy");
-    fm.SetMember(members);
-    fm.SetSingleParent(false);
+    fm.setMembers(members);
+    fm.setSingleParent(false);
     
-    QList<ChineseFamily> & upper = tom.GetUpperRef();
+    QList<Family> & upper = tom.getUpperRef();
     upper.push_back(fm);
     upper.push_back(fm);
     
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     else
         std::cout<<"Deserialize OK!"<<std::endl;
     
-    std::cout<<tom.GetAge()<<std::endl;
+    std::cout<<tom.age()<<std::endl;
     
     return a.exec();
 }
